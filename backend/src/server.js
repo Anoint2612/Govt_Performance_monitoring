@@ -19,7 +19,7 @@ const port = process.env.PORT || 5000;
 
 connectDatabase()
   .then(() => {
-    app.listen(port, () => console.log(`API listening on :${port}`));
+    app.listen(port, () => console.log(`Backend running on :${port}`));
   })
   .catch((err) => {
     console.error('Failed to connect to DB', err);
