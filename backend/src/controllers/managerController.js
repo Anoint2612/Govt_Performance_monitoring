@@ -126,7 +126,7 @@ export async function getManagerTickets(req, res) {
     
     const tickets = await Ticket.find({ 
       employeeId: { $in: employeeIds } 
-    }).populate('raisedBy', 'name email').lean();
+    }).populate('employeeId', 'name email').lean();
     
     return res.json(tickets);
   } catch (e) {
@@ -157,7 +157,7 @@ export async function resolveTicket(req, res) {
         resolutionNotes: resolutionNotes || 'Resolved by manager'
       },
       { new: true }
-    ).populate('raisedBy', 'name email');
+    ).populate('employeeId', 'name email');
     
     return res.json(updated);
   } catch (e) {
@@ -189,7 +189,7 @@ export async function escalateTicket(req, res) {
         resolutionNotes: escalationNotes || 'Escalated by manager'
       },
       { new: true }
-    ).populate('raisedBy', 'name email');
+    ).populate('employeeId', 'name email');
     
     return res.json(updated);
   } catch (e) {

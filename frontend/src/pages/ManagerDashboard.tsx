@@ -24,10 +24,10 @@ interface Emp { _id: string; name: string; email: string; dept?: string; level?:
 interface Assignment { _id: string; taskHeading: string; assignedTo?: Emp }
 interface Ticket { 
   _id: string; 
+  employeeId: { _id: string; name: string; email: string };
   heading: string; 
   details: string; 
-  status: 'Open' | 'Resolved' | 'Escalated';
-  raisedBy: { _id: string; name: string; email: string };
+  status: 'Resolved' | 'Escalated';
   startTime?: string;
   endTime?: string;
   resolutionNotes?: string;
@@ -248,10 +248,10 @@ export default function ManagerDashboard({ onLogout }: Props) {
                         <p className="text-xs text-muted-foreground mb-2">{ticket.details}</p>
                         <div className="flex items-center justify-between">
                           <div className="text-xs text-muted-foreground">
-                            <span className="font-medium">From:</span> {ticket.raisedBy.name} ({ticket.raisedBy.email})
+                            <span className="font-medium">From:</span> {ticket.employeeId?.name || 'Unknown'} ({ticket.employeeId?.email || 'No email'})
                           </div>
                           <div className="flex gap-2">
-                            {ticket.status === 'Open' && (
+                            {ticket.status === 'Escalated' && (
                               <>
                                 <Button 
                                   size="sm" 
@@ -647,7 +647,7 @@ function CreateAssignmentForm({ employees, projects, onCreated }: { employees: a
                 <SelectItem key={member.employeeId._id} value={member.employeeId._id}>
                   <div className="flex items-center gap-2">
                     <User className="h-3 w-3" />
-                    {member.employeeId.name} ({member.employeeId.email})
+                    {member.employeeId?.name || 'Unknown'} ({member.employeeId?.email || 'No email'})
                   </div>
                 </SelectItem>
               ))
