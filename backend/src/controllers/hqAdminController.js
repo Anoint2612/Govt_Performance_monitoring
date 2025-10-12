@@ -13,6 +13,44 @@ export async function getAllProjects(req, res) {
   }
 }
 
+export async function createProject(req, res) {
+  try {
+    const { title, details, budget, deadline, managerId, status = 'Ongoing' } = req.body;
+
+    // Validate required fields
+    if (!title || !budget || !deadline || !managerId) {
+      return res.status(400).json({ message: 'Missing required fields: title, budget, deadline, managerId' });
+    }
+
+    // Validate manager exists
+    const manager = await User.findById(managerId);
+    if (!manager || manager.role !== 'Manager') {
+      return res.status(400).json({ message: 'Invalid manager ID' });
+    }
+
+    // Generate unique project ID
+    const projectId = `PRJ-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+    const project = await Project.create({
+      projectId,
+      title,
+      details,
+      budget: Number(budget),
+      deadline: new Date(deadline),
+      managerId,
+      status
+    });
+
+    // Populate manager info for response
+    await project.populate('managerId', 'name email');
+
+    return res.status(201).json(project);
+  } catch (e) {
+    console.error('Create project error:', e);
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
 export async function getInspectionReports(req, res) {
   try {
     const reports = await ProjectReport.find().populate('projectId', 'title').lean();
@@ -66,6 +104,15 @@ export async function getEscalatedTickets(req, res) {
   try {
     const tickets = await Ticket.find({ status: 'Escalated' }).lean();
     return res.json(tickets);
+  } catch (e) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+export async function getManagers(req, res) {
+  try {
+    const managers = await User.find({ role: 'Manager' }).select('name email dept').lean();
+    return res.json(managers);
   } catch (e) {
     return res.status(500).json({ message: 'Server error' });
   }

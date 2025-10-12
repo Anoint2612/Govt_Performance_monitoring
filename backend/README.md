@@ -25,7 +25,9 @@ npm run dev
 - `POST /auth/register-manager` (HQ only, Bearer token)
 
 ### HQ Admin
-- `GET /hq/projects`
+- `GET /hq/projects` - Get all projects with manager details
+- `POST /hq/projects` - Create new project { title, details, budget, deadline, managerId, status }
+- `GET /hq/managers` - Get all managers for project assignment
 - `GET /hq/inspection-reports`
 - `GET /hq/alerts`
 - `GET /hq/performance?minScore=0&maxScore=100`
