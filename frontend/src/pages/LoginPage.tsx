@@ -37,7 +37,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
             <Shield className="w-10 h-10 text-white animate-glow" />
           </div>
           <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
-            HQ Admin
+            Pragati
           </h1>
           <p className="text-xl text-white/90 max-w-md mx-auto leading-relaxed">
             Secure headquarters management platform for enterprise operations
@@ -166,7 +166,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
 
           {/* Footer */}
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            <p>© 2025 HQ Admin. All rights reserved.</p>
+            <p>© 2025 Pragati. All rights reserved.</p>
           </div>
         </div>
       </div>
