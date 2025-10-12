@@ -45,3 +45,42 @@ export async function registerManager(req, res) {
     return res.status(500).json({ message: 'Server error' });
   }
 }
+
+// Manager only: create employee
+export async function registerEmployee(req, res) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const { name, email, password, dept, level } = req.body;
+    const exists = await User.findOne({ email });
+    if (exists) return res.status(400).json({ message: 'Email already in use' });
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const employee = await User.create({
+      name,
+      email,
+      passwordHash,
+      role: 'Employee',
+      dept,
+      level,
+      managerId: req.user.id
+    });
+    return res.status(201).json({ id: employee._id });
+  } catch (e) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+export async function me(req, res) {
+  try {
+    // authenticate middleware sets req.user
+    const userId = req.user && req.user.id;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+    const user = await User.findById(userId).select('name email role dept').lean();
+    if (!user) return res.status(404).json({ message: 'Not found' });
+    return res.json({ id: user._id, name: user.name, email: user.email, role: user.role, dept: user.dept });
+  } catch (e) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}

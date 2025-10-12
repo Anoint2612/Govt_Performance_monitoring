@@ -7,8 +7,6 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ['HQAdmin', 'Manager', 'Employee'], required: true },
     dept: { type: String },
-    level: { type: String },
-    age: { type: Number },
     employeeId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     managerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     hqAdminId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
