@@ -23,6 +23,7 @@ async function run() {
     )
 
     const p1 = await Project.create({
+      projectId: `PRJ-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
       title: 'Bridge Renovation',
       details: 'Structural reinforcement and resurfacing',
       budget: 1200000,
@@ -32,6 +33,7 @@ async function run() {
     })
 
     const p2 = await Project.create({
+      projectId: `PRJ-${Date.now() + 1}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
       title: 'New Office Buildout',
       details: 'HQ floor 10 fit-out',
       budget: 450000,
@@ -41,8 +43,8 @@ async function run() {
     })
 
     await Alert.create([
-      { type: 'Delay', message: 'Project delay reported on New Office Buildout', relatedId: p2._id },
-      { type: 'Performance', message: 'Employee performance dropped in Ops department' }
+      { projectId: p2._id, type: 'Delay', message: 'Project delay reported on New Office Buildout' },
+      { projectId: p1._id, type: 'Performance', message: 'Employee performance dropped in Ops department' }
     ])
 
     console.log('Sample projects and alerts created:', p1._id.toString(), p2._id.toString())

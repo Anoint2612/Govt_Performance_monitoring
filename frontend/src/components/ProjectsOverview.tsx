@@ -72,7 +72,12 @@ export default function ProjectsOverview() {
         const res = await api.get('/hq/projects');
         if (!cancelled) setProjects(res.data || []);
       } catch (e) {
-        if (!cancelled) setError('Failed to load projects');
+        console.error('Error loading projects:', e);
+        if (e.response?.status === 401) {
+          if (!cancelled) setError('Authentication required. Please log in.');
+        } else {
+          if (!cancelled) setError('Failed to load projects: ' + (e.response?.data?.message || e.message));
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -91,6 +96,9 @@ export default function ProjectsOverview() {
         setManagers(res.data || []);
       } catch (e) {
         console.error('Failed to load managers:', e);
+        if (e.response?.status === 401) {
+          console.error('Authentication required for managers');
+        }
       } finally {
         setManagersLoading(false);
       }

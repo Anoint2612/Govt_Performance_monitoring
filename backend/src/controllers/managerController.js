@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import Alert from '../models/Alert.js';
 import Rating from '../models/Rating.js';
 import ProjectMember from '../models/ProjectMember.js';
+import Ticket from '../models/Ticket.js';
 
 export async function getManagerProjects(req, res) {
   try {
@@ -34,17 +35,25 @@ export async function getManagerAssignments(req, res) {
 
 export async function createAssignment(req, res) {
   try {
-    const { taskHeading, taskDetails, startTime, endTime, assignedTo } = req.body;
+    const { taskHeading, taskDetails, projectId, endTime, assignedTo } = req.body;
+    
+    // Verify the project belongs to this manager
+    const project = await Project.findOne({ _id: projectId, managerId: req.user.id });
+    if (!project) {
+      return res.status(403).json({ message: 'Forbidden or project not found' });
+    }
+    
     const a = await Assignment.create({
+      projectId,
       taskHeading,
       taskDetails,
-      startTime: startTime ? new Date(startTime) : undefined,
       endTime: endTime ? new Date(endTime) : undefined,
       assignedBy: req.user.id,
       assignedTo
     });
     return res.status(201).json({ id: a._id });
   } catch (e) {
+    console.error('Create assignment error:', e);
     return res.status(500).json({ message: 'Server error' });
   }
 }
@@ -78,10 +87,23 @@ export async function getProjectMembers(req, res) {
 
 export async function postManagerAlert(req, res) {
   try {
-    const { type, message, relatedId } = req.body;
-    const alert = await Alert.create({ type, message, relatedId });
+    const { type, message, projectId } = req.body;
+    
+    // Verify the project belongs to this manager
+    const project = await Project.findOne({ _id: projectId, managerId: req.user.id });
+    if (!project) {
+      return res.status(403).json({ message: 'Forbidden or project not found' });
+    }
+    
+    const alert = await Alert.create({ 
+      projectId, 
+      type, 
+      message 
+    });
+    
     return res.status(201).json(alert);
   } catch (e) {
+    console.error('Create alert error:', e);
     return res.status(500).json({ message: 'Server error' });
   }
 }
@@ -92,6 +114,86 @@ export async function postRating(req, res) {
     const r = await Rating.create({ employeeId, managerId: req.user.id, score, notes });
     return res.status(201).json({ id: r._id });
   } catch (e) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+export async function getManagerTickets(req, res) {
+  try {
+    // Get tickets from employees under this manager
+    const employees = await User.find({ managerId: req.user.id }).select('_id').lean();
+    const employeeIds = employees.map(emp => emp._id);
+    
+    const tickets = await Ticket.find({ 
+      employeeId: { $in: employeeIds } 
+    }).populate('raisedBy', 'name email').lean();
+    
+    return res.json(tickets);
+  } catch (e) {
+    console.error('Get manager tickets error:', e);
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+export async function resolveTicket(req, res) {
+  try {
+    const { id } = req.params;
+    const { resolutionNotes } = req.body;
+    
+    // Verify the ticket belongs to an employee under this manager
+    const ticket = await Ticket.findById(id).populate('employeeId', 'managerId');
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' });
+    }
+    
+    if (ticket.employeeId.managerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    
+    const updated = await Ticket.findByIdAndUpdate(
+      id,
+      { 
+        status: 'Resolved',
+        resolutionNotes: resolutionNotes || 'Resolved by manager'
+      },
+      { new: true }
+    ).populate('raisedBy', 'name email');
+    
+    return res.json(updated);
+  } catch (e) {
+    console.error('Resolve ticket error:', e);
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+export async function escalateTicket(req, res) {
+  try {
+    const { id } = req.params;
+    const { escalationNotes } = req.body;
+    
+    // Verify the ticket belongs to an employee under this manager
+    const ticket = await Ticket.findById(id).populate('employeeId', 'managerId');
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' });
+    }
+    
+    if (ticket.employeeId.managerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    
+    const updated = await Ticket.findByIdAndUpdate(
+      id,
+      { 
+        status: 'Escalated',
+        escalatedTo: req.user.id,
+        resolutionNotes: escalationNotes || 'Escalated by manager'
+      },
+      { new: true }
+    ).populate('raisedBy', 'name email');
+    
+    return res.json(updated);
+  } catch (e) {
+    console.error('Escalate ticket error:', e);
     return res.status(500).json({ message: 'Server error' });
   }
 }
