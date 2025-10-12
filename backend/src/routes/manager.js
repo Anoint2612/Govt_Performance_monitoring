@@ -13,6 +13,8 @@ import {
   getManagerTickets,
   resolveTicket,
   escalateTicket,
+  verifyAssignment,
+  updateAssignmentStatus,
 } from '../controllers/managerController.js';
 
 const router = Router();
@@ -29,6 +31,8 @@ router.post('/ratings', postRating);
 router.post('/projects/assign', assignEmployeeToProject);
 router.post('/tickets/:id/resolved', resolveTicket);
 router.post('/tickets/:id/escalated', escalateTicket);
+router.post('/assignments/:id/verify', verifyAssignment);
+router.post('/assignments/:id/status', updateAssignmentStatus);
 router.get('/projects/:id/members', getProjectMembers);
 
 export default router;

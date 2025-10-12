@@ -26,7 +26,10 @@ export async function getManagerEmployees(req, res) {
 
 export async function getManagerAssignments(req, res) {
   try {
-    const assignments = await Assignment.find({ assignedBy: req.user.id }).populate('assignedTo', 'name email').lean();
+  const filter = { assignedBy: req.user.id };
+    const { status } = req.query;
+    if (status) filter.status = status;
+    const assignments = await Assignment.find(filter).populate('assignedTo', 'name email').lean();
     return res.json(assignments);
   } catch (e) {
     return res.status(500).json({ message: 'Server error' });
@@ -194,6 +197,48 @@ export async function escalateTicket(req, res) {
     return res.json(updated);
   } catch (e) {
     console.error('Escalate ticket error:', e);
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+export async function verifyAssignment(req, res) {
+  try {
+    const { id } = req.params;
+    const assignment = await Assignment.findById(id);
+    if (!assignment) return res.status(404).json({ message: 'Assignment not found' });
+
+    // ensure this manager created the assignment
+    if (assignment.assignedBy.toString() !== req.user.id) return res.status(403).json({ message: 'Forbidden' });
+
+    if (assignment.status !== 'Completed') return res.status(400).json({ message: 'Only completed assignments can be verified' });
+
+    assignment.status = 'Verified';
+    await assignment.save();
+    return res.json(assignment);
+  } catch (e) {
+    console.error('Verify assignment error:', e);
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+export async function updateAssignmentStatus(req, res) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const allowed = ['Pending', 'Completed', 'Delayed', 'Verified'];
+    if (!allowed.includes(status)) return res.status(400).json({ message: 'Invalid status' });
+
+    const assignment = await Assignment.findById(id);
+    if (!assignment) return res.status(404).json({ message: 'Assignment not found' });
+
+    // ensure this manager created the assignment
+    if (assignment.assignedBy.toString() !== req.user.id) return res.status(403).json({ message: 'Forbidden' });
+
+    assignment.status = status;
+    await assignment.save();
+    return res.json(assignment);
+  } catch (e) {
+    console.error('Update assignment status error:', e);
     return res.status(500).json({ message: 'Server error' });
   }
 }

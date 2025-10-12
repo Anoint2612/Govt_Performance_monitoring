@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { requireRole } from '../middleware/roleCheck.js';
-import { getEmployeeAssignments, postAssignmentUpdate, getEmployeeProjects, getEmployeeAlerts, postAssignmentTicket } from '../controllers/employeeController.js';
+import { getEmployeeAssignments, postAssignmentUpdate, getEmployeeProjects, getEmployeeAlerts, postAssignmentTicket, getEmployeeAssignmentHistory } from '../controllers/employeeController.js';
 
 const router = Router();
 
@@ -12,5 +12,6 @@ router.post('/assignments/:id/update', postAssignmentUpdate);
 router.get('/projects', getEmployeeProjects);
 router.get('/alerts', getEmployeeAlerts);
 router.post('/assignments/:id/ticket', postAssignmentTicket);
+router.get('/assignments/history', getEmployeeAssignmentHistory);
 
 export default router;
