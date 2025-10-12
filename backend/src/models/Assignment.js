@@ -8,8 +8,7 @@ const assignmentSchema = new mongoose.Schema(
     endTime: { type: Date },
     status: { type: String, enum: ['Pending', 'Completed', 'Delayed'], default: 'Pending' },
     assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    attachments: [{ type: String }]
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
   },
   { timestamps: true }
 );
