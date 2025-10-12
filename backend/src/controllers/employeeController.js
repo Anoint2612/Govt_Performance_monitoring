@@ -7,7 +7,8 @@ import Ticket from '../models/Ticket.js';
 export async function getEmployeeAssignments(req, res) {
   try {
     // fetch as documents so we can update statuses if past endTime
-    const assignments = await Assignment.find({ assignedTo: req.user.id })
+    // Exclude assignments that have been Verified by the manager
+    const assignments = await Assignment.find({ assignedTo: req.user.id, status: { $ne: 'Verified' } })
       .populate('assignedBy', 'name email')
       .populate('projectId', 'title managerId')
     ;
@@ -86,6 +87,21 @@ export async function postAssignmentTicket(req, res) {
     const ticket = await Ticket.create({ employeeId: req.user.id, heading, details, escalatedTo: managerId });
     return res.status(201).json({ id: ticket._id });
   } catch (e) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+export async function getEmployeeAssignmentHistory(req, res) {
+  try {
+    const assignments = await Assignment.find({ assignedTo: req.user.id, status: 'Verified' })
+      .populate('assignedBy', 'name email')
+      .populate('projectId', 'title managerId')
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    return res.json(assignments);
+  } catch (e) {
+    console.error('Get assignment history error:', e);
     return res.status(500).json({ message: 'Server error' });
   }
 }

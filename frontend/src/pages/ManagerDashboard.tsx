@@ -21,7 +21,7 @@ interface Project {
   assignedEmployees?: Emp[];
 }
 interface Emp { _id: string; name: string; email: string; dept?: string; level?: string }
-interface Assignment { _id: string; taskHeading: string; assignedTo?: Emp }
+interface Assignment { _id: string; taskHeading: string; taskDetails?: string; status?: string; endTime?: string; assignedTo?: Emp; projectId?: any }
 interface Ticket { 
   _id: string; 
   employeeId: { _id: string; name: string; email: string };
@@ -39,6 +39,7 @@ export default function ManagerDashboard({ onLogout }: Props) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [employees, setEmployees] = useState<Emp[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [assignmentFilter, setAssignmentFilter] = useState('');
   const [alerts, setAlerts] = useState<any[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [activeTab, setActiveTab] = useState('register');
@@ -48,10 +49,11 @@ export default function ManagerDashboard({ onLogout }: Props) {
   useEffect(() => {
     const fetch = async () => {
       try {
+        const assignmentsPath = '/manager/assignments' + (assignmentFilter ? `?status=${assignmentFilter}` : '');
         const [pRes, eRes, aRes, alRes, tRes] = await Promise.all([
           api.get('/manager/projects'),
           api.get('/manager/employees'),
-          api.get('/manager/assignments'),
+          api.get(assignmentsPath),
           api.get('/alerts'),
           api.get('/manager/tickets')
         ]);
@@ -65,7 +67,7 @@ export default function ManagerDashboard({ onLogout }: Props) {
       }
     };
     fetch();
-  }, []);
+  }, [assignmentFilter]);
 
   const handleTicketAction = async (ticketId: string, action: 'Resolved' | 'Escalated') => {
     try {
@@ -85,6 +87,34 @@ export default function ManagerDashboard({ onLogout }: Props) {
       });
     }
   };
+
+  const handleVerify = async (assignmentId: string) => {
+    try {
+      await api.post(`/manager/assignments/${assignmentId}/verify`);
+      // refresh assignments with current filter
+      const path = '/manager/assignments' + (assignmentFilter ? `?status=${assignmentFilter}` : '');
+      const res = await api.get(path);
+      setAssignments(res.data || []);
+      toast({ title: 'Verified', description: 'Assignment marked as Verified' });
+    } catch (err) {
+      console.error('Failed to verify assignment', err);
+      toast({ title: 'Error', description: 'Could not verify assignment' });
+    }
+  };
+
+    const updateStatus = async (assignmentId: string, status: string) => {
+      try {
+        await api.post(`/manager/assignments/${assignmentId}/status`, { status });
+        // refresh
+        const path = '/manager/assignments' + (assignmentFilter ? `?status=${assignmentFilter}` : '');
+        const res = await api.get(path);
+        setAssignments(res.data || []);
+        toast({ title: 'Updated', description: `Assignment marked ${status}` });
+      } catch (err) {
+        console.error('Failed to update status', err);
+        toast({ title: 'Error', description: 'Could not update assignment status' });
+      }
+    };
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -330,10 +360,41 @@ export default function ManagerDashboard({ onLogout }: Props) {
               </div>
               <div>
                 <div className="bg-card rounded-2xl p-6 border border-border/50 shadow-elegant">
-                  <h3 className="text-lg font-semibold">Recent Assignments</h3>
-                  <ul className="mt-2 text-sm">
-                    {assignments.map(a => <li key={a._id}>{a.taskHeading} — {a.assignedTo?.name || 'Unassigned'}</li>)}
-                  </ul>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">Recent Assignments</h3>
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-muted-foreground">Filter:</label>
+                        <select aria-label="assignment-filter" value={assignmentFilter} onChange={(e) => setAssignmentFilter(e.target.value)} className="border rounded p-1">
+                          <option value="">All</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Verified">Verified</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-sm space-y-2">
+                      {assignments.length === 0 && <p className="text-sm text-muted-foreground">No assignments found</p>}
+                      {assignments.map(a => (
+                        <div key={a._id} className="flex items-center justify-between p-2 border rounded">
+                          <div>
+                            <div className="font-medium">{a.taskHeading}</div>
+                            <div className="text-xs text-muted-foreground">{a.assignedTo?.name || 'Unassigned'}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-sm text-muted-foreground">{a.status}</div>
+                            {a.status === 'Pending' && (
+                              <Button size="sm" onClick={() => updateStatus(a._id, 'Completed')} aria-label={`complete-${a._id}`}>Complete</Button>
+                            )}
+                            {a.status === 'Completed' && (
+                              <>
+                                <Button size="sm" onClick={() => updateStatus(a._id, 'Pending')} aria-label={`mark-pending-${a._id}`}>Mark Pending</Button>
+                                <Button size="sm" onClick={() => handleVerify(a._id)}>Verify</Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                 </div>
               </div>
             </div>
@@ -501,6 +562,7 @@ function ManagerRatingForm({ employees }: { employees: any[] }) {
                 <button
                   key={star}
                   type="button"
+                  aria-label={`rate-${star}`}
                   onClick={() => setScore(star)}
                   className={`p-1 rounded ${
                     star <= score ? 'text-yellow-500' : 'text-gray-300'

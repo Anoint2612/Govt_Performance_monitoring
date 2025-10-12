@@ -4,7 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import api from '../services/api';
 import { toast } from '@/hooks/use-toast';
 
-interface Assignment { _id: string; taskHeading: string; taskDetails?: string; status?: string; endTime?: string; projectId?: any }
+interface Assignment { _id: string; taskHeading: string; taskDetails?: string; status?: string; endTime?: string; projectId?: any; createdAt?: string; updatedAt?: string }
 interface Project { _id: string; title: string; details?: string; totalBudget?: number; spentBudget?: number; deadline?: string; managerId?: any; status?: string }
 
 interface Props { onLogout: () => void }
@@ -13,6 +13,7 @@ export default function EmployeeDashboard({ onLogout }: Props) {
   const [activeTab, setActiveTab] = useState('projects');
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
+  const [historyAssignments, setHistoryAssignments] = useState<Assignment[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [ticketOpenFor, setTicketOpenFor] = useState<string | null>(null);
   const [ticketHeading, setTicketHeading] = useState('');
@@ -35,6 +36,19 @@ export default function EmployeeDashboard({ onLogout }: Props) {
     };
     fetch();
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'history') return;
+    const fetchHistory = async () => {
+      try {
+        const res = await api.get('/employee/assignments/history');
+        setHistoryAssignments(res.data || []);
+      } catch (err) {
+        console.error('Failed to load assignment history', err);
+      }
+    };
+    fetchHistory();
+  }, [activeTab]);
 
   async function refreshAssignments() {
     const res = await api.get('/employee/assignments');
@@ -88,10 +102,11 @@ export default function EmployeeDashboard({ onLogout }: Props) {
 
       <div className="container mx-auto p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsList className="grid w-full grid-cols-4 mb-4">
             <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="alerts">Alerts</TabsTrigger>
             <TabsTrigger value="details">Project Details</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="projects">
@@ -122,7 +137,19 @@ export default function EmployeeDashboard({ onLogout }: Props) {
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           <div className="text-sm">{a.status}</div>
-                          <input aria-label={`complete-${a._id}`} type="checkbox" checked={a.status === 'Completed'} onChange={() => toggleComplete(a)} />
+                          <select aria-label={`status-${a._id}`} value={a.status || 'Pending'} onChange={async (e) => {
+                            const newStatus = e.target.value;
+                            try {
+                              await api.post(`/employee/assignments/${a._id}/update`, { status: newStatus });
+                              await refreshAssignments();
+                            } catch (err) {
+                              toast({ title: 'Error', description: 'Could not update status' });
+                            }
+                          }} className="border rounded p-1">
+                            <option value="Pending">Pending</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Delayed">Delayed</option>
+                          </select>
                           <Button size="sm" onClick={() => raiseTicketFor(a)}>Raise Ticket</Button>
                         </div>
                       </div>
@@ -172,6 +199,23 @@ export default function EmployeeDashboard({ onLogout }: Props) {
                  <div className="text-sm">Total budget: {p.totalBudget ? fmt.format(p.totalBudget) : '-'}</div>
                  <div className="text-sm mt-1">Spent: {p.spentBudget ? fmt.format(p.spentBudget) : '-'}</div>
                     </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="history">
+            <div className="bg-card rounded-2xl p-6 border border-border/50 shadow-elegant">
+              <h2 className="text-lg font-semibold">Assignment History</h2>
+              <p className="text-sm text-muted-foreground mt-2">Verified assignments (audit trail).</p>
+              <div className="mt-4 space-y-3">
+                {historyAssignments.length === 0 && <p className="text-sm text-muted-foreground">No verified assignments</p>}
+                {historyAssignments.map(h => (
+                  <div key={h._id} className="p-3 border rounded">
+                    <div className="font-medium">{h.taskHeading}</div>
+                    <div className="text-sm text-muted-foreground">Project: {h.projectId?.title || 'Unknown'}</div>
+                    <div className="text-xs text-muted-foreground">Verified at: {new Date(h.updatedAt || h.createdAt).toLocaleString()}</div>
                   </div>
                 ))}
               </div>
