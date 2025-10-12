@@ -55,6 +55,7 @@ export default function ProjectsOverview() {
   const [formLoading, setFormLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('list');
 
+  // Form state
   const [form, setForm] = useState<ProjectForm>({
     title: '',
     details: '',
@@ -213,6 +214,7 @@ export default function ProjectsOverview() {
           </TabsList>
 
           <TabsContent value="list" className="space-y-4">
+            {/* Projects Table */}
             {projects.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <FolderOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -227,58 +229,64 @@ export default function ProjectsOverview() {
                 </Button>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Budget</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="flex items-center gap-1">
-                      <User className="h-4 w-4" />
-                      Manager
-                    </TableHead>
-                    <TableHead className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      Deadline
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {projects.map((project) => (
-                    <TableRow key={project._id}>
-                      <TableCell className="font-medium">
-                        <div>
-                          <div className="font-semibold">{project.title}</div>
-                          {project.details && (
-                            <div className="text-sm text-muted-foreground mt-1">
-                              {project.details}
-                            </div>
-                          )}
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Budget</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <User className="h-4 w-4" />
+                          Manager
                         </div>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {formatCurrency(project.budget)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(project.status)}>
-                          {project.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{project.managerId?.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {project.managerId?.email}
-                          </div>
+                      </TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          Deadline
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {project.deadline ? new Date(project.deadline).toLocaleDateString() : '—'}
-                      </TableCell>
+                      </TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {projects.map((project) => (
+                      <TableRow key={project._id}>
+                        <TableCell className="font-medium">
+                          <div>
+                            <div className="font-semibold">{project.title}</div>
+                            {project.details && (
+                              <div className="text-sm text-muted-foreground mt-1">
+                                {project.details}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {formatCurrency(project.budget)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusBadgeVariant(project.status)}>
+                            {project.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{project.managerId?.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {project.managerId?.email}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {project.deadline ? new Date(project.deadline).toLocaleDateString() : '—'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </TabsContent>
 
