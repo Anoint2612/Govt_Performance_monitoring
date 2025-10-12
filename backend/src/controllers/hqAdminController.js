@@ -3,6 +3,7 @@ import ProjectReport from '../models/ProjectReport.js';
 import Alert from '../models/Alert.js';
 import Ticket from '../models/Ticket.js';
 import User from '../models/User.js';
+import mongoose from 'mongoose';
 
 export async function getAllProjects(req, res) {
   try {
@@ -114,6 +115,41 @@ export async function getManagers(req, res) {
     const managers = await User.find({ role: 'Manager' }).select('name email dept').lean();
     return res.json(managers);
   } catch (e) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+export async function getManagersWithProjects(req, res) {
+  try {
+    // First get all managers
+    const managers = await User.find({ role: 'Manager' })
+      .select('name email dept createdAt')
+      .lean();
+
+    // Get projects for each manager and calculate stats
+    const managersWithProjects = await Promise.all(
+      managers.map(async (manager) => {
+        // Ensure proper ObjectId conversion
+        const managerObjectId = new mongoose.Types.ObjectId(manager._id);
+        const projects = await Project.find({ managerId: managerObjectId })
+          .select('title status deadline budget createdAt')
+          .sort({ createdAt: -1 })
+          .lean();
+        
+        return {
+          ...manager,
+          projects,
+          projectCount: projects.length,
+          activeProjects: projects.filter(p => p.status === 'Ongoing').length,
+          completedProjects: projects.filter(p => p.status === 'Completed').length,
+          delayedProjects: projects.filter(p => p.status === 'Delayed').length
+        };
+      })
+    );
+
+    return res.json(managersWithProjects);
+  } catch (e) {
+    console.error('Get managers with projects error:', e);
     return res.status(500).json({ message: 'Server error' });
   }
 }

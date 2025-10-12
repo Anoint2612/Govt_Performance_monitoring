@@ -10,7 +10,8 @@ import {
   addManager,
   resolveTicket,
   getEscalatedTickets,
-  getManagers
+  getManagers,
+  getManagersWithProjects
 } from '../controllers/hqAdminController.js';
 
 const router = Router();
@@ -20,6 +21,7 @@ router.use(authenticate, requireRole('HQAdmin'));
 router.get('/projects', getAllProjects);
 router.post('/projects', createProject);
 router.get('/managers', getManagers);
+router.get('/managers-with-projects', getManagersWithProjects);
 router.get('/inspection-reports', getInspectionReports);
 router.get('/alerts', getAlerts);
 router.get('/performance', filterPerformance);
