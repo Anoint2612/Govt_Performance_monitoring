@@ -63,6 +63,7 @@ const App = () => {
         setRole(me.data.role || '');
         localStorage.setItem('role', me.data.role || '');
       } catch (err) {
+        console.error('Error fetching user profile:', err);
         // invalid token, clear
         setToken('');
         setAuthToken('');
@@ -72,7 +73,7 @@ const App = () => {
         setProfileLoaded(true);
       }
     })();
-    return <div />; // small placeholder while loading
+    return <div>Loading...</div>; // small placeholder while loading
   }
   // route to role-specific dashboards
   return (

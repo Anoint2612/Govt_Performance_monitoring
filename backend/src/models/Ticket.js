@@ -6,10 +6,8 @@ const ticketSchema = new mongoose.Schema(
     employeeId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     heading: { type: String, required: true },
     details: { type: String },
-    startTime: { type: Date },
-    endTime: { type: Date },
-    status: { type: String, enum: ['Open', 'Resolved', 'Escalated'], default: 'Open' },
-    raisedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    createdAt: { type: Date, default: Date.now },
+    status: { type: String, enum: ['Resolved', 'Escalated'], default: 'Escalated' },
     escalatedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     resolutionNotes: { type: String }
   },
@@ -17,7 +15,7 @@ const ticketSchema = new mongoose.Schema(
 );
 
 ticketSchema.index({ managerId: 1, status: 1 });
-ticketSchema.index({ raisedBy: 1 });
+ticketSchema.index({ employeeId: 1 });
 
 export default mongoose.model('Ticket', ticketSchema);
 

@@ -9,6 +9,7 @@
     "start": "node src/server.js",
     "seed:admin": "node src/seed/adminSeed.js",
     "seed:sample": "node src/seed/sampleData.js",
+    "seed:manager": "node src/seed/managerData.js",
     "token": "node -r dotenv/config -e \"import('jsonwebtoken').then(m=>console.log(m.default.sign({userId:process.env.TOKEN_USER_ID}, process.env.JWT_SECRET,{expiresIn:'12h'})))\" dotenv_config_path=.env"
   },
   "dependencies": {
