@@ -652,7 +652,7 @@ function CreateAssignmentForm({ employees, projects, onCreated }: { employees: a
                 </SelectItem>
               ))
             ) : (
-              <SelectItem value="" disabled>
+              <SelectItem value="no-employees" disabled>
                 {selectedProjectId ? 'No employees assigned to this project' : 'Select a project first'}
               </SelectItem>
             )}
