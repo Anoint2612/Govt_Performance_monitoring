@@ -1,6 +1,6 @@
 # HQ System (HQ Admin MVP)
 
-## Protoype Demo (Early stage) -> https://youtu.be/lNuFMxR63es
+## Protoype Demo -> https://youtu.be/lNuFMxR63es
 
 ## Backend
 - Node.js + Express + Mongoose
