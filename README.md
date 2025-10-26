@@ -249,17 +249,6 @@ Govt_Performance_monitoring-hq-system/
 - **Connection pooling** for database efficiency
 - **Request/response compression** ready for production
 
-## 🚀 Deployment
-
-### Production Environment Variables
-```env
-NODE_ENV=production
-MONGO_URI=mongodb://your-mongo-connection-string
-REDIS_URL=redis://your-redis-connection-string
-JWT_SECRET=your-production-jwt-secret
-PORT=5000
-```
-
 ## 🔮 Future Enhancements
 
 - **Real-time notifications** with Socket.io integration
